@@ -1,7 +1,10 @@
 package crypto
 
 import (
+	"crypto"
+	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 )
@@ -10,6 +13,28 @@ import (
 type RSAKeyPair struct {
 	Public  *rsa.PublicKey
 	Private *rsa.PrivateKey
+}
+
+// RSASigner implements RSA signing
+type RSASigner struct {
+	privateKey *rsa.PrivateKey
+}
+
+// NewRSASigner creates a new RSA signer
+func NewRSASigner(privateKey *rsa.PrivateKey) *RSASigner {
+	return &RSASigner{
+		privateKey: privateKey,
+	}
+}
+
+// Sign signs the data using RSA-PSS
+func (s *RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
+	hash := sha256.Sum256(dataToBeSigned)
+	signature, err := rsa.SignPSS(rand.Reader, s.privateKey, crypto.SHA256, hash[:], nil)
+	if err != nil {
+		return nil, err
+	}
+	return signature, nil
 }
 
 // RSAMarshaler can encode and decode an RSA key pair.

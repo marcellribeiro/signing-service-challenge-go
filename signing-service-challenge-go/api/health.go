@@ -1,6 +1,10 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 type HealthResponse struct {
 	Status  string `json:"status"`
@@ -8,18 +12,11 @@ type HealthResponse struct {
 }
 
 // Health evaluates the health of the service and writes a standardized response.
-func (s *Server) Health(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		WriteErrorResponse(response, http.StatusMethodNotAllowed, []string{
-			http.StatusText(http.StatusMethodNotAllowed),
-		})
-		return
-	}
-
+func (s *Server) Health(c *gin.Context) {
 	health := HealthResponse{
 		Status:  "pass",
 		Version: "v0",
 	}
 
-	WriteAPIResponse(response, http.StatusOK, health)
+	c.JSON(http.StatusOK, Response{Data: health})
 }

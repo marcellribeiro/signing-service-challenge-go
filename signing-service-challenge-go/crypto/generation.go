@@ -7,6 +7,11 @@ import (
 	"crypto/rsa"
 )
 
+// Signer defines a contract for different types of signing implementations.
+type Signer interface {
+	Sign(dataToBeSigned []byte) ([]byte, error)
+}
+
 // RSAGenerator generates a RSA key pair.
 type RSAGenerator struct{}
 

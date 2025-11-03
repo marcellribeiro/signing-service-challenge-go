@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/persistence"
+	"github.com/gin-gonic/gin"
 )
 
 // Response is the generic API response container.
@@ -18,63 +18,36 @@ type ErrorResponse struct {
 // Server manages HTTP requests and dispatches them to the appropriate services.
 type Server struct {
 	listenAddress string
+	repository    *persistence.InMemoryRepository
+	router        *gin.Engine
 }
 
 // NewServer is a factory to instantiate a new Server.
 func NewServer(listenAddress string) *Server {
+	repository := persistence.NewInMemoryRepository()
+
 	return &Server{
 		listenAddress: listenAddress,
-		// TODO: add services / further dependencies here ...
+		repository:    repository,
+		router:        gin.Default(),
 	}
 }
 
 // Run registers all HandlerFuncs for the existing HTTP routes and starts the Server.
 func (s *Server) Run() error {
-	mux := http.NewServeMux()
+	v0 := s.router.Group("/api/v0")
+	{
+		// Health endpoint
+		v0.GET("/health", s.Health)
 
-	mux.Handle("/api/v0/health", http.HandlerFunc(s.Health))
+		// Device endpoints
+		v0.POST("/devices", s.CreateDevice)
+		v0.GET("/devices", s.ListDevices)
+		v0.GET("/devices/:id", s.GetDevice)
 
-	// TODO: register further HandlerFuncs here ...
-
-	return http.ListenAndServe(s.listenAddress, mux)
-}
-
-// WriteInternalError writes a default internal error message as an HTTP response.
-func WriteInternalError(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
-}
-
-// WriteErrorResponse takes an HTTP status code and a slice of errors
-// and writes those as an HTTP error response in a structured format.
-func WriteErrorResponse(w http.ResponseWriter, code int, errors []string) {
-	w.WriteHeader(code)
-
-	errorResponse := ErrorResponse{
-		Errors: errors,
+		// Signature endpoint
+		v0.POST("/devices/:id/sign", s.SignTransaction)
 	}
 
-	bytes, err := json.Marshal(errorResponse)
-	if err != nil {
-		WriteInternalError(w)
-	}
-
-	w.Write(bytes)
-}
-
-// WriteAPIResponse takes an HTTP status code and a generic data struct
-// and writes those as an HTTP response in a structured format.
-func WriteAPIResponse(w http.ResponseWriter, code int, data interface{}) {
-	w.WriteHeader(code)
-
-	response := Response{
-		Data: data,
-	}
-
-	bytes, err := json.MarshalIndent(response, "", "  ")
-	if err != nil {
-		WriteInternalError(w)
-	}
-
-	w.Write(bytes)
+	return s.router.Run(s.listenAddress)
 }

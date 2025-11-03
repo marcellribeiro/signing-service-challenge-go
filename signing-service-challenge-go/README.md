@@ -1,5 +1,126 @@
 # Signature Service - Coding Challenge
+## New version after changes
 
+### Build and Run
+```bash
+# Install dependencies
+make install
+
+# Build the application
+make build
+
+# Run tests
+make test
+
+# Build and run
+make run
+```
+
+### Available Make Commands
+```bash
+make help              # Show all available commands
+make build             # Build the application
+make test              # Run all tests
+make test-coverage     # Run tests with coverage report
+make test-domain       # Run domain tests only
+make test-api          # Run API tests only
+make test-crypto       # Run crypto tests only
+make test-persistence  # Run persistence tests only
+make run               # Build and run the application
+make clean             # Clean build artifacts
+make check             # Format, vet and test
+```
+
+## Implemented Features
+
+### ✅ Core Functionality
+- **RESTful API** using Gin framework
+- **Signature Devices**: Create and manage RSA/ECDSA signing devices
+- **Transaction Signing**: Sign data with monotonically increasing counter
+- **Signature Chaining**: Each signature includes the previous signature (blockchain-like)
+- **Thread-Safe Operations**: Concurrent-safe counter increment with mutex
+- **In-Memory Storage**: Thread-safe repository with CRUD operations
+
+### 🔐 Security Features
+- **RSA Signing**: RSA-PSS with SHA-256
+- **ECDSA Signing**: ECDSA with P-384 curve and SHA-256
+- **Signature Counter**: Strictly monotonically increasing, gap-free
+- **Signature Format**: `<counter>_<data>_<last_signature_base64>`
+
+### 📡 API Endpoints
+```
+POST   /api/v0/devices          - Create signature device (RSA or ECDSA)
+GET    /api/v0/devices          - List all devices
+GET    /api/v0/devices/:id      - Get device by ID
+POST   /api/v0/devices/:id/sign - Sign transaction data
+GET    /api/v0/health           - Health check
+```
+
+### 🧪 Testing
+- **27 test cases** across 5 test files
+- **100% passing** tests including concurrency tests
+- **Table-driven tests** following Go best practices
+- **Coverage**: Domain methods, API endpoints, crypto, persistence
+
+### 🏗️ Architecture
+```
+domain/          - Business logic and device model
+api/             - HTTP handlers with Gin
+crypto/          - RSA/ECDSA signers and key generation
+persistence/     - In-memory repository (ready for DB migration)
+```
+
+## AI Tools Usage
+
+### GitHub Copilot
+This project was developed with the assistance of **GitHub Copilot** as an AI pair programming tool. Below is a detailed breakdown of how AI was utilized throughout the development process:
+
+#### Areas Where AI Was Used:
+
+**1. Domain Model Implementation (`domain/device.go`)**
+- The `GetSecuredDataToSign()` method logic was developed with AI assistance, ensuring correct format: `<counter>_<data>_<last_signature>`
+- AI suggested the pattern for base64 encoding the device ID for the initial signature case
+
+**2. Unit Tests (`*_test.go` files)**
+- **All test files** were created with GitHub Copilot assistance using table-driven test patterns
+- AI helped structure 27 test cases across 5 test files covering:
+  - Domain methods (device_methods_test.go) - 7 test functions
+  - Crypto key generation (generation_test.go) - 2 test functions
+  - In-memory persistence (inmemory_test.go) - 4 test functions
+  - API endpoints (device_test.go, server_test.go) - 5 test functions
+- The concurrency test (`TestIncrementCounter_Concurrency`) was designed with AI to verify thread-safety with 100 concurrent goroutines
+
+**3. Thread-Safe Counter Implementation**
+- GitHub Copilot provided guidance on implementing the monotonically increasing signature counter
+- AI recommended using `sync.Mutex` to prevent race conditions in concurrent environments
+- The `IncrementCounter()` method implementation with proper locking was developed with AI assistance
+
+**4. Documentation**
+- This README structure and content organization was created with GitHub Copilot
+- The Makefile commands documentation was formatted with AI assistance
+
+#### Design Decisions Made by Developer:
+
+While AI assisted with implementation, the following architectural decisions were made independently:
+- Choice of Gin framework for the HTTP API layer
+- Repository pattern for persistence layer (preparing for future database migration)
+- Separation of concerns: domain, API, crypto, and persistence packages
+- RESTful API endpoint design and routing structure
+- Error handling strategies and HTTP status code selections
+
+#### Development Approach:
+
+The development followed a **collaborative approach** where:
+1. Core architecture and design patterns were defined by the developer
+2. GitHub Copilot assisted with boilerplate code, test structures, and implementation details
+3. All AI-generated code was reviewed, tested, and adjusted to meet the challenge requirements
+4. The developer retained full understanding and ownership of the codebase
+
+This approach allowed for **faster development** while maintaining **code quality** and ensuring complete understanding of all implemented functionality, which enables thorough discussion during the interview process.
+
+---
+
+# Signature Service - Coding Challenge - Original README
 ## Instructions
 
 This challenge is part of the software engineering interview process at fiskaly.

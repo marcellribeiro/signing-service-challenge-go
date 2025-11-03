@@ -2,6 +2,8 @@ package crypto
 
 import (
 	"crypto/ecdsa"
+	"crypto/rand"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 )
@@ -10,6 +12,28 @@ import (
 type ECCKeyPair struct {
 	Public  *ecdsa.PublicKey
 	Private *ecdsa.PrivateKey
+}
+
+// ECDSASigner implements ECDSA signing
+type ECDSASigner struct {
+	privateKey *ecdsa.PrivateKey
+}
+
+// NewECDSASigner creates a new ECDSA signer
+func NewECDSASigner(privateKey *ecdsa.PrivateKey) *ECDSASigner {
+	return &ECDSASigner{
+		privateKey: privateKey,
+	}
+}
+
+// Sign signs the data using ECDSA
+func (s *ECDSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
+	hash := sha256.Sum256(dataToBeSigned)
+	signature, err := ecdsa.SignASN1(rand.Reader, s.privateKey, hash[:])
+	if err != nil {
+		return nil, err
+	}
+	return signature, nil
 }
 
 // ECCMarshaler can encode and decode an ECC key pair.
